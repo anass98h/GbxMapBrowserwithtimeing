@@ -41,8 +41,7 @@ namespace GbxMapBrowser
                 "Track of the Day",
                 "How many recent Track of the Day maps should be checked?",
                 100,
-                1,
-                500
+                1
             )
             {
                 Owner = Window.GetWindow(this)

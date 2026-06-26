@@ -33,13 +33,36 @@ namespace GbxMapBrowser.Services.TrackmaniaExchange
             CancellationToken cancellationToken = default
         )
         {
+            const int maxMapsPerRequest = 1000;
+
             string fields = Uri.EscapeDataString("MapId,MapUid,Name,UploadedAt,UpdatedAt,Uploader.Name");
-            string url = $"{BaseUrl}/api/maps?fields={fields}&count={count}&intotd=1&order1=8";
+            List<TmxMap> maps = [];
+            long? afterMapId = null;
 
-            TmxMapSearchResponse response = await GetJsonAsync<TmxMapSearchResponse>(url, cancellationToken)
-                ?? new TmxMapSearchResponse();
+            while (maps.Count < count)
+            {
+                int requestCount = Math.Min(maxMapsPerRequest, count - maps.Count);
+                string afterQuery = afterMapId.HasValue ? $"&after={afterMapId.Value}" : "";
+                string url = $"{BaseUrl}/api/maps?fields={fields}&count={requestCount}{afterQuery}&intotd=1&order1=8";
 
-            return response.Results;
+                TmxMapSearchResponse response = await GetJsonAsync<TmxMapSearchResponse>(url, cancellationToken)
+                    ?? new TmxMapSearchResponse();
+
+                if (response.Results.Count == 0)
+                {
+                    break;
+                }
+
+                maps.AddRange(response.Results);
+                afterMapId = response.Results[^1].MapId;
+
+                if (!response.More)
+                {
+                    break;
+                }
+            }
+
+            return maps;
         }
 
         public async Task<IReadOnlyList<TmxMappack>> GetOfficialCampaignsAsync(

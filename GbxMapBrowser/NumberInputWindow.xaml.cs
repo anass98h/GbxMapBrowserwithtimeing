@@ -8,12 +8,12 @@ namespace GbxMapBrowser
     public partial class NumberInputWindow : Window
     {
         private readonly int _minValue;
-        private readonly int _maxValue;
+        private readonly int? _maxValue;
         private bool _canSubmit;
 
         public int Value { get; private set; }
 
-        public NumberInputWindow(string title, string prompt, int defaultValue, int minValue, int maxValue)
+        public NumberInputWindow(string title, string prompt, int defaultValue, int minValue, int? maxValue = null)
         {
             InitializeComponent();
 
@@ -63,10 +63,14 @@ namespace GbxMapBrowser
 
             if (!int.TryParse(numberTextBox.Text.Trim(), out int value) ||
                 value < _minValue ||
-                value > _maxValue)
+                (_maxValue.HasValue && value > _maxValue.Value))
             {
+                string rangeMessage = _maxValue.HasValue
+                    ? $"Enter a number from {_minValue} to {_maxValue.Value}."
+                    : $"Enter a number greater than or equal to {_minValue}.";
+
                 MessageBox.Show(
-                    $"Enter a number from {_minValue} to {_maxValue}.",
+                    rangeMessage,
                     "Invalid number",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning
